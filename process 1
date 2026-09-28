@@ -60,3 +60,158 @@ int main()
 
     return 0;
 }
+
+
+
+
+
+
+
+3. Implement an orphan process using fork.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main()
+{
+    pid_t pid = fork();
+
+    if (pid == 0)
+    {
+        printf("Child: My original Parent PID is %d\n", getppid());
+
+        sleep(5);
+
+        printf("Child (Orphan): My new Parent PID is %d\n", getppid());
+    }
+    else if (pid > 0)
+    {
+        printf("Parent process is exiting\n");
+        exit(0);
+    }
+
+    return 0;
+}
+
+
+
+
+4. Implement a zombie process using fork.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main()
+{
+    pid_t pid = fork();
+
+    if (pid == 0)
+    {
+        printf("Child process created\n");
+        printf("Child PID: %d\n", getpid());
+        printf("Child terminating\n");
+        exit(0);
+    }
+    else if (pid > 0)
+    {
+        printf("Parent process created\n");
+        printf("Parent PID: %d\n", getpid());
+        printf("Child PID: %d\n", pid);
+
+        sleep(10);
+
+        printf("Parent terminating\n");
+    }
+    else
+    {
+        printf("Fork failed\n");
+    }
+
+    return 0;
+}
+
+
+
+
+
+5. Write a program with a local variable and a global variable. Initialize both
+of them. The program should fork a child process and the child should
+increment both the variables by 1. After this operation, both the parent and
+the child should print the values of the variable.
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int global_var = 10;
+
+int main()
+{
+    int local_var = 20;
+
+    pid_t pid = fork();
+
+    if(pid == 0)
+    {
+        printf("Child modifying variables\n");
+
+        global_var++;
+        local_var++;
+
+        printf("Child - Global: %d, Local: %d\n",
+               global_var, local_var);
+    }
+    else if(pid > 0)
+    {
+        wait(NULL);
+
+        printf("Parent checking variables\n");
+
+        printf("Parent - Global: %d, Local: %d\n",
+               global_var, local_var);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+6. Implement the assignment no. 5 using vfork for spawning the child.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int global_var = 10;
+
+int main()
+{
+    int local_var = 20;
+
+    pid_t pid = vfork();
+
+    if(pid == 0)
+    {
+        printf("Child modifying variables via vfork\n");
+
+        global_var++;
+        local_var++;
+
+        printf("Child - Global: %d, Local: %d\n",
+               global_var, local_var);
+
+        exit(0);
+    }
+    else if(pid > 0)
+    {
+        printf("Parent checking variables after vfork\n");
+
+        printf("Parent - Global: %d, Local: %d\n",
+               global_var, local_var);
+    }
+
+    return 0;
+}

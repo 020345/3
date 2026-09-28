@@ -23,3 +23,40 @@ int main()
 
     return 0;
 }
+
+
+
+
+
+2. Write a program to get the PID of parent and child process.
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main()
+{
+    pid_t pid = fork();
+
+    if (pid < 0)
+    {
+        printf("Fork failed\n");
+        return 1;
+    }
+    else if (pid == 0)
+    {
+        printf("Child process running\n");
+        printf("Child's own PID: %d\n", getpid());
+        printf("Child's parent PID: %d\n", getppid());
+    }
+    else
+    {
+        printf("Parent process running\n");
+        printf("Parent's own PID: %d\n", getpid());
+        printf("Parent's child PID: %d\n", pid);
+
+        wait(NULL);
+    }
+
+    return 0;
+}

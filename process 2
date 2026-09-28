@@ -1,0 +1,170 @@
+1. Write a program that creates three child processes. The first child
+process executes the command “who”, the second child process
+executes the command “ls” passing it the parameter “–al” using
+execlp(..) C function and the third child process executes the command
+“date” with path ”/bin/date” in execl() C function. The parent process
+waits for all the child processes to finish and prints the termination status
+of the child. (C Library unistd.h contains all exec.... Functions)
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main()
+{
+    pid_t pid1, pid2, pid3, child;
+    int status;
+
+    // Child 1
+    pid1 = fork();
+    if (pid1 == 0)
+    {
+        printf("Child 1 (PID: %d) executing who\n", getpid());
+        execlp("who", "who", (char *)NULL);
+        perror("execlp failed");
+        exit(1);
+    }
+
+    // Child 2
+    pid2 = fork();
+    if (pid2 == 0)
+    {
+        printf("Child 2 (PID: %d) executing ls -al\n", getpid());
+        execlp("ls", "ls", "-al", (char *)NULL);
+        perror("execlp failed");
+        exit(1);
+    }
+
+    // Child 3
+    pid3 = fork();
+    if (pid3 == 0)
+    {
+        printf("Child 3 (PID: %d) executing date\n", getpid());
+        execl("/bin/date", "date", (char *)NULL);
+        perror("execl failed");
+        exit(1);
+    }
+
+    printf("Parent waiting for all children...\n");
+
+    for (int i = 0; i < 3; i++)
+    {
+        child = wait(&status);
+        printf("Child with PID %d terminated with status %d\n",
+               child, WEXITSTATUS(status));
+    }
+
+    printf("All children have terminated.\n");
+
+    return 0;
+}
+
+
+
+
+
+
+2. Write a program to create a process which will run as a background
+process for fifty seconds and at the time of execution it will print the
+system information.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main()
+{
+    pid_t pid = fork();
+
+    if(pid < 0)
+    {
+        perror("fork failed");
+        return 1;
+    }
+
+    if(pid == 0)
+    {
+        printf("Background process started.\n");
+        printf("PID : %d\n", getpid());
+
+        for(int i = 0; i < 50; i++)
+        {
+            printf("System Information:\n");
+            system("uname -a");
+            sleep(1);
+        }
+
+        printf("Background process finished.\n");
+        exit(0);
+    }
+
+    printf("Parent Process PID : %d\n", getpid());
+    printf("Child running in background with PID : %d\n", pid);
+
+    return 0;
+}
+
+
+
+
+
+
+3. Write a program that creates two child processes. Each of the child
+process prints numbers from 1 to 10. Each time a child prints a number
+it also prints its own PID and parent PID. The parent waits for both of its
+child to finish execution and prints “Good Bye” before exiting.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main()
+{
+    pid_t pid1, pid2;
+
+    pid1 = fork();
+
+    if(pid1 < 0)
+    {
+        perror("fork failed");
+        return 1;
+    }
+
+    if(pid1 == 0)
+    {
+        for(int i = 1; i <= 10; i++)
+        {
+            printf("Child1 : Number=%d PID=%d PPID=%d\n",
+                   i, getpid(), getppid());
+        }
+        exit(0);
+    }
+
+    pid2 = fork();
+
+    if(pid2 < 0)
+    {
+        perror("fork failed");
+        return 1;
+    }
+
+    if(pid2 == 0)
+    {
+        for(int i = 1; i <= 10; i++)
+        {
+            printf("Child2 : Number=%d PID=%d PPID=%d\n",
+                   i, getpid(), getppid());
+        }
+        exit(0);
+    }
+
+    waitpid(pid1, NULL, 0);
+    waitpid(pid2, NULL, 0);
+
+    printf("Good Bye\n");
+
+    return 0;
+}

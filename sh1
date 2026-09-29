@@ -1,0 +1,154 @@
+1. Write a shell script to calculate addition of two numbers.
+#!/bin/bash
+
+echo "Enter first number:"
+read num1
+
+echo "Enter second number:"
+read num2
+
+sum=$((num1 + num2))
+
+echo "Sum = $sum"
+
+
+
+
+2. Write a shell script to compare two numbers.
+#!/bin/bash
+
+echo "Enter first number:"
+read num1
+
+echo "Enter second number:"
+read num2
+
+if [ $num1 -gt $num2 ]
+then
+    echo "$num1 is greater than $num2"
+elif [ $num1 -lt $num2 ]
+then
+    echo "$num2 is greater than $num1"
+else
+    echo "Both numbers are equal"
+fi
+
+
+
+
+
+
+3. Write a shell script to calculate whether a given number is odd or even.
+#!/bin/bash
+
+echo "Enter a number:"
+read num
+
+if [ $((num % 2)) -eq 0 ]
+then
+    echo "$num is Even"
+else
+    echo "$num is Odd"
+fi
+
+
+
+
+
+
+
+4. Write a shell script to calculate the sum of digits of any number entered
+through the keyboard.
+#!/bin/bash
+
+echo "Enter a number:"
+read num
+
+sum=0
+
+while [ $num -gt 0 ]
+do
+    digit=$((num % 10))
+    sum=$((sum + digit))
+    num=$((num / 10))
+done
+
+echo "Sum of digits = $sum"
+
+
+
+
+
+
+5. Write a shell script to show the maximum of three numbers.
+#!/bin/bash
+
+echo "Enter first number:"
+read num1
+
+echo "Enter second number:"
+read num2
+
+echo "Enter third number:"
+read num3
+
+if [ $num1 -ge $num2 ] && [ $num1 -ge $num3 ]
+then
+    echo "Maximum number = $num1"
+
+elif [ $num2 -ge $num1 ] && [ $num2 -ge $num3 ]
+then
+    echo "Maximum number = $num2"
+
+else
+    echo "Maximum number = $num3"
+fi
+
+
+
+
+
+6. Write a shell script which displays the result of division of one integer by
+another integer and informs if the user tries to divide an integer by 0.
+#!/bin/bash
+
+echo "Enter dividend:"
+read num1
+
+echo "Enter divisor:"
+read num2
+
+if [ $num2 -eq 0 ]
+then
+    echo "Error! Division by zero is not possible."
+else
+    result=$((num1 / num2))
+    echo "Result = $result"
+fi
+
+
+
+
+7. Write a shell script that takes a number from user and prints the
+reverse of the number.
+#!/bin/bash
+
+echo "Enter a number:"
+read num
+
+rev=0
+
+while [ $num -gt 0 ]
+do
+    rem=$((num % 10))
+    rev=$((rev * 10 + rem))
+    num=$((num / 10))
+done
+
+echo "Reverse number = $rev"
+
+
+
+
+
+

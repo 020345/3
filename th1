@@ -1,0 +1,102 @@
+1. Write a program to create a thread that displays a WELCOME message.
+#include <stdio.h>
+#include <pthread.h>
+
+void *welcome(void *arg)
+{
+    printf("WELCOME\n");
+    pthread_exit(NULL);
+}
+
+int main()
+{
+    pthread_t tid;
+
+    pthread_create(&tid, NULL, welcome, NULL);
+
+    pthread_join(tid, NULL);
+
+    printf("Main thread finished\n");
+
+    pthread_exit(NULL);
+}
+
+
+
+
+
+
+
+2. Write a program that creates multiple threads and terminate those. The
+program should create 5 threads with the pthread_create() routine. Each
+thread prints a “Hello World!” message and then terminates with a call
+to pthread_exit().
+
+#include <stdio.h>
+#include <pthread.h>
+
+#define NUM_THREADS 5
+
+void *hello(void *arg)
+{
+    int id = *(int *)arg;
+
+    printf("Hello World! from Thread %d\n", id);
+
+    pthread_exit(NULL);
+}
+
+int main()
+{
+    pthread_t threads[NUM_THREADS];
+    int thread_id[NUM_THREADS];
+    int i;
+
+    for(i = 0; i < NUM_THREADS; i++)
+    {
+        thread_id[i] = i + 1;
+        pthread_create(&threads[i], NULL, hello, &thread_id[i]);
+    }
+
+    for(i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(threads[i], NULL);
+    }
+
+    printf("All threads have terminated.\n");
+
+    pthread_exit(NULL);
+}
+
+
+
+
+
+
+3. Write a program which implements thread with arguments and thread
+joining.
+#include <stdio.h>
+#include <pthread.h>
+
+void *printNumber(void *arg)
+{
+    int num = *(int *)arg;
+
+    printf("Value received by thread: %d\n", num);
+
+    pthread_exit(NULL);
+}
+
+int main()
+{
+    pthread_t tid;
+    int value = 100;
+
+    pthread_create(&tid, NULL, printNumber, &value);
+
+    pthread_join(tid, NULL);
+
+    printf("Main thread finished.\n");
+
+    pthread_exit(NULL);
+}

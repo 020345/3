@@ -1,0 +1,394 @@
+1. Write a code in C to implement how a process communicates with
+another process using the pipe function.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <string.h>
+
+int main()
+{
+    int pipefds[2];
+    pid_t pid;
+
+    char write_message[] = "Hello from parent process";
+    char read_message[100];
+
+    if (pipe(pipefds) == -1)
+    {
+        perror("Pipe creation failed");
+        return 1;
+    }
+
+    pid = fork();
+
+    if (pid < 0)
+    {
+        perror("Fork failed");
+        return 1;
+    }
+
+    if (pid > 0)
+    {
+        // Parent Process
+        close(pipefds[0]);   // Close read end
+
+        printf("Parent: Sending message to child...\n");
+
+        write(pipefds[1], write_message, strlen(write_message) + 1);
+
+        close(pipefds[1]);
+    }
+    else
+    {
+        // Child Process
+        close(pipefds[1]);   // Close write end
+
+        printf("Child: Waiting to receive message...\n");
+
+        read(pipefds[0], read_message, sizeof(read_message));
+
+        printf("Child: Received message: %s\n", read_message);
+
+        close(pipefds[0]);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+2. Write a code in C to implement how a process communicates with
+another process using the popen function.
+#include <stdio.h>
+#include <stdlib.h>
+
+#define BUFFER_SIZE 256
+
+int main()
+{
+    FILE *pipe_fp;
+    char buffer[BUFFER_SIZE];
+
+    // Execute the command "ls -la" and open a pipe for reading
+    pipe_fp = popen("ls -la", "r");
+
+    if (pipe_fp == NULL)
+    {
+        perror("popen failed");
+        return 1;
+    }
+
+    printf("Parent process reading output from 'ls -la':\n\n");
+
+    while (fgets(buffer, sizeof(buffer), pipe_fp) != NULL)
+    {
+        printf("%s", buffer);
+    }
+
+    int status = pclose(pipe_fp);
+
+    if (status == -1)
+    {
+        perror("pclose failed");
+        return 1;
+    }
+
+    printf("\nChild process exited with status: %d\n", status);
+
+    return 0;
+}
+
+
+
+
+
+
+3. Write a program that creates a one-way pipe between a parent and child
+process. The parent process gets a string from standard input and sends
+the string to the child. The child prints the reverse of the string. Both
+parent and child terminates when the string “quit” is input.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
+
+#define BUFFER_SIZE 1024
+
+void reverse_string(char *str)
+{
+    int start = 0;
+    int end = strlen(str) - 1;
+    char temp;
+
+    while (start < end)
+    {
+        temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        start++;
+        end--;
+    }
+}
+
+int main()
+{
+    int pipefds[2];
+    pid_t pid;
+    char buffer[BUFFER_SIZE];
+
+    if (pipe(pipefds) == -1)
+    {
+        perror("Pipe creation failed");
+        return 1;
+    }
+
+    pid = fork();
+
+    if (pid < 0)
+    {
+        perror("Fork failed");
+        return 1;
+    }
+
+    if (pid > 0)
+    {
+        // Parent Process
+        close(pipefds[0]);
+
+        printf("Enter text (type 'quit' to exit):\n");
+
+        while (1)
+        {
+            printf("Parent Input: ");
+            fflush(stdout);
+
+            if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+                break;
+
+            buffer[strcspn(buffer, "\n")] = '\0';
+
+            write(pipefds[1], buffer, strlen(buffer) + 1);
+
+            if (strcmp(buffer, "quit") == 0)
+                break;
+        }
+
+        close(pipefds[1]);
+        wait(NULL);
+
+        printf("Parent process terminating.\n");
+    }
+    else
+    {
+        // Child Process
+        close(pipefds[1]);
+
+        while (1)
+        {
+            int bytes_read = read(pipefds[0], buffer, sizeof(buffer));
+
+            if (bytes_read <= 0)
+                break;
+
+            if (strcmp(buffer, "quit") == 0)
+                break;
+
+            reverse_string(buffer);
+
+            printf("Child Output: %s\n", buffer);
+            fflush(stdout);
+        }
+
+        close(pipefds[0]);
+        printf("Child process terminating.\n");
+    }
+
+    return 0;
+}
+
+
+
+
+
+4. Write a program that creates a two-way pipe between a parent and child
+process. The parent process gets an integer from standard input and
+sends the integer to the child and the child computes the sum of all
+integers up to the input value received from parent and sends the result
+back to the parent process, which then prints it. Both the parent and
+child terminates when the number 0 is input.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main()
+{
+    int p1[2], p2[2];
+
+    pipe(p1);
+    pipe(p2);
+
+    if (fork() > 0)
+    {
+        // Parent Process
+        close(p1[0]);
+        close(p2[1]);
+
+        int num;
+        long sum;
+
+        printf("Enter an integer (0 to exit):\n");
+
+        while (1)
+        {
+            printf("Parent Input: ");
+            scanf("%d", &num);
+
+            write(p1[1], &num, sizeof(num));
+
+            if (num == 0)
+                break;
+
+            read(p2[0], &sum, sizeof(sum));
+
+            printf("Parent Result: Sum up to %d is %ld\n", num, sum);
+        }
+
+        close(p1[1]);
+        close(p2[0]);
+
+        wait(NULL);
+    }
+    else
+    {
+        // Child Process
+        close(p1[1]);
+        close(p2[0]);
+
+        int num;
+
+        while (1)
+        {
+            read(p1[0], &num, sizeof(num));
+
+            if (num == 0)
+                break;
+
+            long sum = (long)num * (num + 1) / 2;
+
+            write(p2[1], &sum, sizeof(sum));
+        }
+
+        close(p1[0]);
+        close(p2[1]);
+
+        exit(0);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+5. Write a program that creates one-way pipe between a parent and three
+child processes. The parent process gets an integer number range from
+
+standard input and divides the entire range to three child processes.
+Each of the child after receiving the sub-range, searches for prime
+numbers in that range and prints them.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int is_prime(int n)
+{
+    if (n <= 1)
+        return 0;
+
+    for (int i = 2; i * i <= n; i++)
+    {
+        if (n % i == 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+int main()
+{
+    int pipes[3][2];
+    int start, end;
+
+    printf("Enter start and end range: ");
+    scanf("%d %d", &start, &end);
+
+    int step = (end - start + 1) / 3;
+
+    for (int i = 0; i < 3; i++)
+    {
+        pipe(pipes[i]);
+
+        if (fork() == 0)
+        {
+            int range[2];
+
+            close(pipes[i][1]);   // Close write end
+
+            read(pipes[i][0], range, sizeof(range));
+
+            close(pipes[i][0]);
+
+            printf("[Child %d] Primes (%d to %d): ",
+                   i + 1, range[0], range[1]);
+
+            for (int num = range[0]; num <= range[1]; num++)
+            {
+                if (is_prime(num))
+                    printf("%d ", num);
+            }
+
+            printf("\n");
+            exit(0);
+        }
+
+        close(pipes[i][0]);   // Parent closes read end
+    }
+
+    int current_start = start;
+
+    for (int i = 0; i < 3; i++)
+    {
+        int range[2];
+
+        range[0] = current_start;
+
+        if (i == 2)
+            range[1] = end;
+        else
+            range[1] = current_start + step - 1;
+
+        write(pipes[i][1], range, sizeof(range));
+
+        close(pipes[i][1]);
+
+        current_start = range[1] + 1;
+    }
+
+    for (int i = 0; i < 3; i++)
+        wait(NULL);
+
+    return 0;
+}
